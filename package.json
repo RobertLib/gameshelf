@@ -1,0 +1,55 @@
+{
+  "name": "gameshelf",
+  "version": "0.1.0",
+  "private": true,
+  "description": "GameShelf - a catalog of a physical collection of computer and console games",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "npm run build --workspace @gameshelf/contracts && concurrently -k -n contracts,api,web -c magenta,cyan,green \"npm:dev:contracts\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:contracts": "npm run dev --workspace @gameshelf/contracts",
+    "dev:api": "npm run dev --workspace @gameshelf/api",
+    "dev:web": "npm run dev --workspace @gameshelf/web",
+    "build": "npm run build --workspace @gameshelf/contracts && npm run build --workspace @gameshelf/web && npm run build --workspace @gameshelf/api",
+    "start": "npm run start:prod --workspace @gameshelf/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint . --max-warnings 0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run test --workspaces --if-present",
+    "test:e2e": "npm run test:e2e --workspace @gameshelf/api",
+    "db:generate": "npm run db:generate --workspace @gameshelf/api",
+    "db:migrate": "npm run db:migrate --workspace @gameshelf/api",
+    "db:deploy": "npm run db:deploy --workspace @gameshelf/api",
+    "db:seed": "npm run db:seed --workspace @gameshelf/api",
+    "db:studio": "npm run db:studio --workspace @gameshelf/api",
+    "db:reset": "npm run db:reset --workspace @gameshelf/api",
+    "setup": "npm install && npm run build --workspace @gameshelf/contracts && npm run db:generate && npm run db:migrate && npm run db:seed"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "concurrently": "^9.2.1",
+    "eslint": "^10.9.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.67.0"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "esbuild@0.28.2": true,
+    "unrs-resolver@1.12.2": true,
+    "@scarf/scarf": false,
+    "fsevents@2.3.3": true
+  },
+  "type": "module"
+}

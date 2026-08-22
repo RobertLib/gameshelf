@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A new push to the same branch cancels the run in progress - there is no point
+# paying to check a commit nobody cares about any more.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      # The contracts are an input for both applications, so they have to be
+      # built before anything is type-checked or linted.
+      - name: Build the contracts
+        run: npm run build --workspace @gameshelf/contracts
+
+      - name: Formatting
+        run: npx prettier --check .
+
+      - name: Lint
+        run: npx eslint . --max-warnings 0
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: End-to-end tests
+        run: npm run test:e2e --workspace @gameshelf/api
+
+      # Deliberately the last step: the build is the most expensive one and there
+      # is no point running it once something cheaper has already failed.
+      - name: Build
+        run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # It is deployed as a single image, so we also check that it builds.
+      - name: Build the image
+        run: docker build -t gameshelf:ci .

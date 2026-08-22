@@ -1,0 +1,71 @@
+@import 'tailwindcss';
+
+/*
+ * The theme is switched with the `dark` class on <html> (set by the script in
+ * index.html before the first paint). The variant below tells Tailwind to make
+ * `dark:` react to that class instead of the system setting - otherwise the
+ * manual switch would not work.
+ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans:
+    'Inter var', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+
+  /* Purple as the primary color - different enough from the blue every other
+     admin panel uses, and it keeps its contrast on a dark background. */
+  --color-brand-50: oklch(0.977 0.014 308);
+  --color-brand-100: oklch(0.946 0.033 307);
+  --color-brand-200: oklch(0.902 0.063 306);
+  --color-brand-300: oklch(0.827 0.109 306);
+  --color-brand-400: oklch(0.714 0.163 305);
+  --color-brand-500: oklch(0.627 0.205 304);
+  --color-brand-600: oklch(0.558 0.226 303);
+  --color-brand-700: oklch(0.489 0.215 303);
+  --color-brand-800: oklch(0.417 0.18 304);
+  --color-brand-900: oklch(0.359 0.144 305);
+  --color-brand-950: oklch(0.243 0.101 306);
+
+  --radius-card: 0.875rem;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    scroll-behavior: smooth;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    @apply dark:bg-slate-950 dark:text-slate-100;
+  }
+
+  /* A visible focus ring for the keyboard - without it the application cannot
+     be driven with tab. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-500;
+  }
+
+  /* Number inputs without spinners: for the release year and the price they are
+     only in the way. */
+  input[type='number']::-webkit-outer-spin-button,
+  input[type='number']::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type='number'] {
+    -moz-appearance: textfield;
+  }
+}
+
+@layer components {
+  /* The page canvas - every screen uses it for identical padding. */
+  .page-shell {
+    @apply mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8;
+  }
+}

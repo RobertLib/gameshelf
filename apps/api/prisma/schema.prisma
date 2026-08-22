@@ -1,0 +1,154 @@
+// GameShelf - database schema
+//
+// A note on portability: the schema deliberately uses neither native enums nor
+// arrays (`String[]`), so moving from SQLite to PostgreSQL is a change of
+// `provider` plus a new migration, nothing more. The enum values are guarded by
+// Zod in @gameshelf/contracts, and the lookup tables are full-blown tables.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  displayName  String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  games         Game[]
+  refreshTokens RefreshToken[]
+
+  @@map("users")
+}
+
+/// Refresh tokens with rotation. Only a hash is stored, never the token itself.
+/// `familyId` ties together the rotation chain of one session - when an already
+/// used token shows up, the whole family is revoked (token theft detection).
+model RefreshToken {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash       String    @unique
+  familyId        String
+  expiresAt       DateTime
+  /// When the whole session stops being renewable, no matter how actively it is
+  /// used. Every rotation copies it, so `expiresAt` is capped by it - without
+  /// that, a session used at least once every REFRESH_TOKEN_TTL_DAYS would live
+  /// forever. `null` marks a token issued before absolute caps existed; it gets
+  /// one on its next rotation.
+  familyExpiresAt DateTime?
+  usedAt          DateTime?
+  revokedAt       DateTime?
+  userAgent       String?
+  createdAt       DateTime  @default(now())
+
+  @@index([userId])
+  @@index([familyId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+/// Global lookup table of platforms (see prisma/seed.ts).
+model Platform {
+  id           String  @id @default(cuid())
+  slug         String  @unique
+  name         String
+  manufacturer String?
+  generation   Int?
+  releaseYear  Int?
+  sortOrder    Int     @default(0)
+
+  games Game[]
+
+  @@index([sortOrder])
+  @@map("platforms")
+}
+
+/// Global lookup table of genres.
+model Genre {
+  id        String @id @default(cuid())
+  slug      String @unique
+  name      String
+  sortOrder Int    @default(0)
+
+  games Game[] @relation("GameGenres")
+
+  @@map("genres")
+}
+
+/// One physical copy (or a group of identical copies) in a user's collection.
+model Game {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  /// Normalized title for alphabetical sorting - without diacritics and without
+  /// the article ("The Legend of Zelda" -> "legend of zelda"). Filled in by the
+  /// service layer.
+  sortTitle   String
+  /// All searchable fields glued together, without diacritics and lower cased.
+  /// Thanks to it, full-text search is a single LIKE and works for accent-free
+  /// terms too.
+  searchIndex String
+
+  platformId String
+  platform   Platform @relation(fields: [platformId], references: [id], onDelete: Restrict)
+  genres     Genre[]  @relation("GameGenres")
+
+  releaseYear Int?
+  developer   String?
+  publisher   String?
+  edition     String?
+  barcode     String?
+
+  region        String
+  condition     String
+  /// Numeric weight of the condition (MINT=5 … POOR=1). Without it, sorting "by
+  /// condition" would sort alphabetically by the name of the constant.
+  conditionRank Int
+  completeness  String
+  status        String
+
+  quantity   Int     @default(1)
+  isFavorite Boolean @default(false)
+  rating     Int?
+
+  coverImageUrl String?
+
+  /// Money in the smallest unit of the currency (cents) - no float errors.
+  purchasePriceMinor  Int?
+  estimatedValueMinor Int?
+  purchaseCurrency    String  @default("CZK")
+  /// A date in the YYYY-MM-DD form. As text it sorts correctly and is immune to
+  /// the time zone shifts that would only be a nuisance for a plain date.
+  purchaseDate        String?
+  purchasedFrom       String?
+
+  storageLocation String?
+  notes           String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, sortTitle])
+  @@index([userId, releaseYear])
+  @@index([userId, createdAt])
+  @@index([userId, updatedAt])
+  @@index([userId, rating])
+  /// The list can be sorted by price and by condition too; without these the
+  /// database reads the whole collection and sorts it in memory.
+  @@index([userId, purchasePriceMinor])
+  @@index([userId, conditionRank])
+  @@index([userId, platformId])
+  @@index([userId, status])
+  @@index([userId, isFavorite])
+  @@map("games")
+}

@@ -1,0 +1,22 @@
+node_modules
+**/node_modules
+**/dist
+**/coverage
+var
+**/var
+*.db
+.git
+.gitignore
+# Every variant, not just `.env`. `.env.local` is loaded *first* and therefore
+# wins (see apps/api/src/config/env-files.ts), so a developer's local overrides
+# would end up baked into the production image and quietly beat the defaults for
+# anything the Dockerfile does not set itself - JWT_ACCESS_SECRET included.
+.env
+.env.*
+**/.env
+**/.env.*
+!**/.env.example
+Dockerfile
+.dockerignore
+README.md
+**/*.tsbuildinfo

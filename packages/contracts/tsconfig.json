@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // URL/URLSearchParams are standard in both the web and Node runtimes; the
+    // DOM lib is here only for their types, no DOM API is used in the contracts.
+    "lib": ["ES2023", "DOM"],
+    "rootDir": "./src",
+    "moduleResolution": "Bundler",
+    "module": "ESNext",
+    "noEmit": true
+  },
+  "include": ["src/**/*.ts"]
+}

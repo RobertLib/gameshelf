@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  // The project used by `npm run typecheck` and by lint.
+  //
+  // `tsconfig.json` has `rootDir: ./src` and excludes the tests, so nobody ever
+  // type-checked the e2e test, the seed or `prisma.config.ts` - an error in them
+  // only surfaced while the tests were running. Here they are all included.
+  // Emit still uses `tsconfig.build.json`.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "prisma/**/*.ts",
+    "prisma.config.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
+}
